@@ -1,13 +1,17 @@
-package REST_Assured_Automation;
-
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
+import io.restassured.path.json.JsonPath;
 import io.restassured.response.Response;
+import io.restassured.response.ResponseBody;
+import io.restassured.response.ValidatableResponse;
 import io.restassured.specification.RequestSpecification;
 import org.json.simple.JSONObject;
 import org.testng.Assert;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+
+import java.sql.Timestamp;
+import java.time.Instant;
 
 import static io.restassured.RestAssured.given;
 
@@ -31,6 +35,8 @@ public class API_TEST_Automation {
         Response response = request.post("/api/users");
 
         Assert.assertEquals(response.statusCode(), 201);
+        Assert.assertEquals(response.jsonPath().getString("name"), "morpheus");
+        Assert.assertEquals(response.jsonPath().getString("job"), "leader");
     }
 
     @Test
@@ -52,14 +58,14 @@ public class API_TEST_Automation {
                 .then()
                 .extract().response();
         Assert.assertEquals(response.statusCode(), 200);
+        Assert.assertEquals(response.jsonPath().getString("id"), "4");
+        Assert.assertEquals(response.jsonPath().getString("token"), "QpwL5tke4Pnpja7X4");
     }
 
     @Test
     public void Register_Unsuccess() { //post
         String requestParams = "{\n" +
-                "\n" +
-                "\"email\":\n" +
-                "\"sydney@fife\"\n" +
+                "\"email\": \"sydney@fife\"\n" +
                 "}";
         Response response = given()
                 .header("Content-type", "application/json")
@@ -70,6 +76,7 @@ public class API_TEST_Automation {
                 .then()
                 .extract().response();
         Assert.assertEquals(response.statusCode(), 400);
+        Assert.assertEquals(response.jsonPath().getString("error"), "Missing password");
     }
 
     @Test
@@ -88,6 +95,7 @@ public class API_TEST_Automation {
                 .then()
                 .extract().response();
         Assert.assertEquals(response.statusCode(), 200);
+        Assert.assertEquals(response.jsonPath().getString("token"), "QpwL5tke4Pnpja7X4");
     }
 
     @Test
@@ -105,6 +113,7 @@ public class API_TEST_Automation {
                 .then()
                 .extract().response();
         Assert.assertEquals(response.statusCode(), 400);
+        Assert.assertEquals(response.jsonPath().getString("error"), "Missing password");
     }
 
     @Test
@@ -116,7 +125,12 @@ public class API_TEST_Automation {
                 .get("/api/users?page=2")
                 .then()
                 .extract().response();
+        JsonPath jsonPath = response.jsonPath();
+        String email = jsonPath.get("data.email[0]");
+
         Assert.assertEquals(response.statusCode(), 200);
+        Assert.assertEquals(response.jsonPath().getString("total"), "12");
+        Assert.assertEquals(email, "michael.lawson@reqres.in");
     }
 
     @Test
@@ -128,7 +142,12 @@ public class API_TEST_Automation {
                 .get("/api/unknown")
                 .then()
                 .extract().response();
+        JsonPath jsonPath = response.jsonPath();
+        String email = jsonPath.get("data.name[0]");
+
         Assert.assertEquals(response.statusCode(), 200);
+        Assert.assertEquals(response.jsonPath().getString("total"), "12");
+        Assert.assertEquals(email, "cerulean");
     }
 
     @Test
@@ -145,7 +164,9 @@ public class API_TEST_Automation {
                 .put("/api/users/2")
                 .then()
                 .extract().response();
+
         Assert.assertEquals(response.statusCode(), 200);
+        Assert.assertEquals(response.jsonPath().getString("job"), "zion resident");
     }
 
     @Test
@@ -163,6 +184,7 @@ public class API_TEST_Automation {
                 .then()
                 .extract().response();
         Assert.assertEquals(response.statusCode(), 200);
+        Assert.assertEquals(response.jsonPath().getString("job"), "zion resident");
     }
 
     @Test
@@ -175,6 +197,4 @@ public class API_TEST_Automation {
                 .extract().response();
         Assert.assertEquals(response.statusCode(), 204);
     }
-
-
 }
